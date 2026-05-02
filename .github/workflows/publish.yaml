@@ -78,26 +78,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set Environment Variables
+        run: |
+          echo "VERSION_SEMVER=${VERSION#v}" >> $GITHUB_ENV
+
       - name: Update Choco Manifest
         run: |
-          export VERSION_SEMVER="${VERSION#v}"
           ./scripts/update_manifest.sh  
         shell: bash
 
-      - name: Build Choco Package
+      - name: Build and Test Choco Package
         run: |
           choco pack -y --outdir "${OUTDIR_NUPKG}" ${OUTDIR_MANIFEST}/*.nuspec
+          choco install -y --acceptlicense "${NAME}" --version="${VERSION_SEMVER}" --source="${OUTDIR_NUPKG};https://community.chocolatey.org/api/v2/"
         shell: bash
 
-      - name: Test Choco Manifest
+      - name: Test App Installation
         run: |
-          choco install -y --acceptlicense "${NAME}" --version="${VERSION}" --source="${OUTDIR_NUPKG};https://community.chocolatey.org/api/v2/"
           file_conversor --version
-        shell: bash
-
-      - name: Publish Choco Package
-        run: |
-          choco push ${OUTDIR_NUPKG}/*.nupkg --source https://push.chocolatey.org/ --apikey "${{ secrets.CHOCO_API_KEY }}"
         shell: bash
 
       - name: Commit and Push
@@ -108,4 +106,9 @@ jobs:
           git diff --cached --quiet && echo "No changes" && exit 0 || echo "Changes detected, committing..."
           git commit -m "Update Choco manifest to version $VERSION"
           git push 
+        shell: bash
+
+      - name: Publish Choco Package
+        run: |
+          choco push ${OUTDIR_NUPKG}/*.nupkg --source https://push.chocolatey.org/ --apikey "${{ secrets.CHOCO_API_KEY }}"
         shell: bash
