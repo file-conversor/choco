@@ -1,0 +1,21 @@
+{
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.autopep8",
+    },
+    "[powershell]": {
+        "editor.formatOnSave": false,
+    },
+    "files.associations": {
+        "*.ps1.j2": "powershell",
+        "*.sh.j2": "shellscript",
+        "*.py.j2": "python",
+        "*.nuspec.j2": "xml",
+        "*.json.j2": "json",
+        "*.yaml.j2": "yaml",
+        "*.toml.j2": "yaml",
+        "*.md.j2": "markdown",
+    },
+    "cSpell.enabled": false,
+    "pylint.enabled": false,
+}

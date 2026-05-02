@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>file_conversor</id>
+    <version>0.7.4</version>
+    <title>File Conversor</title>
+    <authors>Andre Luiz Romano Madureira</authors>
+    <description>
+      A powerful Python-based CLI tool for converting, compressing, and manipulating audio, video, text, document, and image files.
+    </description>
+    <summary>Universal file conversor for multimedia files (audio, video, pdf, docs, etc).</summary>
+    <tags>file converter file_conversor audio video pdf docs cross-platform</tags>
+    <iconUrl>https://raw.githubusercontent.com/file-conversor/file_conversor/v0.7.4/src/file_conversor/.icons/icon.png</iconUrl>
+    <projectUrl>https://github.com/file-conversor/file_conversor</projectUrl>
+    <projectSourceUrl>https://github.com/file-conversor/file_conversor</projectSourceUrl>
+    <packageSourceUrl>https://github.com/file-conversor/choco</packageSourceUrl>
+    <licenseUrl>https://github.com/file-conversor/file_conversor/v0.7.4/blob/master/LICENSE</licenseUrl>
+    <releaseNotes>https://github.com/file-conversor/file_conversor/v0.7.4/releases/tag/v0.7.4</releaseNotes>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <dependencies>
+      <dependency id="chocolatey-core.extension" version="1.3.3" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>  
+</package>
