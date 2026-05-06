@@ -8,7 +8,7 @@ on:
       - 'v*.*.*'
 
 jobs:
-  update-manifest:
+  publish:
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
