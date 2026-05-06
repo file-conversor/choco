@@ -1,114 +1,52 @@
 # .github/workflows/publish.yaml
 
-#  This workflow listens for a repository_dispatch event with the type "update-package".
-#  When triggered, it updates the Chocolatey manifest file with the new version, 
-#  tests the installation, and commits the changes back to the repository.
-
-name: Update Chocolatey Manifest and Publish
+name: Publish Chocolatey Package
 
 on:
-  repository_dispatch:
-    types: [ update-package ]
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to update in the manifest (e.g., v1.2.3)"
-        required: true
-        type: string
-
-env:
-  TITLE: File Conversor
-  NAME: file_conversor
-  AUTHOR: Andre Luiz Romano Madureira
-  SUMMARY: Universal file conversor for multimedia files (audio, video, pdf, docs, etc).
-  TAGS: file converter file_conversor audio video pdf docs cross-platform
-  DESCRIPTION: |
-    Universal file conversor for multimedia files (audio, video, pdf, docs, etc).
-
-    ## Usage
-
-    ### CLI - Command line interface
-
-    ![cli_terminal_demo](https://cdn.jsdelivr.net/gh/file-conversor/file_conversor@master/.readme_assets/cli_demo.gif)
-
-    Run ``file_conversor -h`` to explore all available commands and options.
-
-    ### GUI - Graphical user interface
-
-    ![cli_terminal_demo](https://cdn.jsdelivr.net/gh/file-conversor/file_conversor@master/.readme_assets/gui.jpg)
-
-    Run ``file_conversor_gui`` to launch the GUI application or double click the Shortcut.
-
-    ### Context Menu (Windows Explorer, Dolphin, etc)
-
-    1. Right click a file in File Explorer
-    2. Choose an action from "File Conversor" menu
-
-    ![windows_context_menu](https://cdn.jsdelivr.net/gh/file-conversor/file_conversor@master/.readme_assets/ctx_menu.jpg)
-
-    ## Features
-
-    - Format Conversion
-    - Compression
-    - Metadata Extraction
-    - File Manipulation (e.g., resizing, cropping, rotating, etc)
-    - Batch Processing
-    - Cross-Platform Compatibility (Windows, Linux, macOS)
-    - Drag-and-Drop Support (GUI)
-
-    *For full feature set, check* [`FEATURE_SET.md`](https://github.com/file-conversor/file_conversor/blob/master/FEATURE_SET.md)
-  HOMEPAGE_RAW: https://raw.githubusercontent.com/file-conversor/file_conversor
-  HOMEPAGE: https://github.com/file-conversor/file_conversor
-  HOMEPAGE_SRC: https://github.com/file-conversor/file_conversor
-  HOMEPAGE_CHOCO: https://github.com/file-conversor/choco
-  ICON_FILE: src/file_conversor/.icons/icon.png
-  CHECKSUMS_FILE: checksum.sha256
-  OUTDIR_MANIFEST: choco
-  OUTDIR_NUPKG: dist
-
-permissions:
-  contents: write
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   update-manifest:
     runs-on: windows-latest
-    env:
-      VERSION: ${{ github.event.client_payload.version || github.event.inputs.version }}
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Set Environment Variables
+      - name: Setting env variables
         run: |
-          echo "VERSION_SEMVER=${VERSION#v}" >> $GITHUB_ENV
+          NAME="$(basename *.nuspec .nuspec)"
+          VERSION=$(echo "${GITHUB_REF#refs/tags/}" | sed 's/^v//')
+          OUTPUT_DIR="dist"
 
-      - name: Update Choco Manifest
-        run: |
-          ./scripts/update_manifest.sh  
+          echo "NAME=${NAME}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "OUTPUT_DIR=${OUTPUT_DIR}" >> $GITHUB_ENV
+          
+          echo "Environment vars:"
+          echo "NAME=${NAME}"
+          echo "VERSION=${VERSION}"
+          echo "OUTPUT_DIR=${OUTPUT_DIR}"
         shell: bash
 
-      - name: Build and Test Choco Package
+      - name: Build Choco Package
         run: |
-          choco pack -y --outdir "${OUTDIR_NUPKG}" ${OUTDIR_MANIFEST}/*.nuspec
-          choco install -y --acceptlicense "${NAME}" --version="${VERSION_SEMVER}" --source="${OUTDIR_NUPKG};https://community.chocolatey.org/api/v2/"
+          choco pack -y --outdir "${OUTPUT_DIR}" *.nuspec
+          ls -l "${OUTPUT_DIR}"
+        shell: bash
+
+      - name: Install Choco Package
+        run: |          
+          choco install -y --acceptlicense "${NAME}" --version="${VERSION}" --source="${OUTPUT_DIR};https://community.chocolatey.org/api/v2/"
         shell: bash
 
       - name: Test App Installation
         run: |
-          file_conversor --version
-        shell: bash
-
-      - name: Commit and Push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "${OUTDIR_MANIFEST}"
-          git diff --cached --quiet && echo "No changes" && exit 0 || echo "Changes detected, committing..."
-          git commit -m "Update Choco manifest to version $VERSION"
-          git push 
+          ${NAME} --version
         shell: bash
 
       - name: Publish Choco Package
         run: |
-          choco push ${OUTDIR_NUPKG}/*.nupkg --source https://push.chocolatey.org/ --apikey "${{ secrets.CHOCO_API_KEY }}"
+          choco push ${OUTPUT_DIR}/*.nupkg --source https://push.chocolatey.org/ --apikey "${{ secrets.CHOCO_API_KEY }}"
         shell: bash
